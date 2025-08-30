@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
-public class EmparejamientoService {
+public class NotificationService {
 
     private static final int RETARDO_MS = 200; // configurable
     private static final int MAX_LATENCIA_MS = 1000;
@@ -27,48 +27,41 @@ public class EmparejamientoService {
     @Autowired
     private ExecutorService pool;
 
-    public EmparejamientoService() {
+    public NotificationService() {
         inicializarArchivo();
     }
 
-    public void procesarEmparejamiento(long inicio) {
+    public void processNotification(NotificationRequest request) {
+        long inicio = System.currentTimeMillis();
         pool.submit(() -> {
             try {
-                // Simular trabajo antes de enviar notificaciones
                 Thread.sleep(new Random().nextInt(50) + 50);
-
-                // Generar dos notificaciones
-                enviarNotificacion("Comprador", inicio);
-                enviarNotificacion("Vendedor", inicio);
-
+                sendNotification("Seller", request.getSellerUserIp(), request.getNotificationId(), request.getNotificationMessage(), inicio);
+                sendNotification("Buyer", request.getBuyerUserIp(), request.getNotificationId(), request.getNotificationMessage(), inicio);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         });
     }
 
-    private void enviarNotificacion(String destinatario, long inicio) {
+    private void sendNotification(String destinatario, String userIp, String notificationId, String notificationMessage, long inicio) {
         try {
             Thread.sleep(RETARDO_MS);
-
             long fin = System.currentTimeMillis();
             long latencia = fin - inicio;
-
             totalNotificaciones.incrementAndGet();
             sumaLatencias.addAndGet(latencia);
             latenciaMaxima.updateAndGet(x -> Math.max(x, latencia));
             if (latencia <= MAX_LATENCIA_MS) {
                 notificacionesCumplen.incrementAndGet();
             }
-
             // Guardar en archivo
             synchronized (lock) {
                 try (FileWriter fw = new FileWriter(LOG_FILE, true)) {
-                    fw.write(destinatario + "," + latencia + "," + fin + "\n");
+                    fw.write(destinatario + "," + userIp + "," + notificationId + "," + notificationMessage + "," + latencia + "," + fin + "\n");
                 }
             }
-
-            System.out.println("Notificacion enviada a " + destinatario + " en " + latencia + " ms");
+            System.out.println("Notificacion enviada a " + destinatario + " (" + userIp + ") en " + latencia + " ms: " + notificationMessage);
         } catch (InterruptedException | IOException e) {
             Thread.currentThread().interrupt();
         }

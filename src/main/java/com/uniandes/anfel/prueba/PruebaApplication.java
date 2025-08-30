@@ -14,7 +14,7 @@ public class PruebaApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(PruebaApplication.class, args);
-        System.out.println("Backend escuchando en http://localhost:8080/emparejamiento");
+        System.out.println("Backend escuchando en http://localhost:8080/send-notification");
     }
 
     @Bean
