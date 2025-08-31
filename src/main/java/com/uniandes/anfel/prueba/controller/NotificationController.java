@@ -4,17 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.uniandes.anfel.prueba.services.NotificationRequest;
-import com.uniandes.anfel.prueba.services.NotificationService;
+import com.uniandes.anfel.prueba.queue.NotificationQueue;
 
 @RestController
 public class NotificationController {
 
     @Autowired
-    private NotificationService emparejamientoService;
+    private NotificationQueue notificationQueue;
 
     @PostMapping("/send-notification")
     public String processNotification(@RequestBody NotificationRequest request) {
-        emparejamientoService.processNotification(request);
-        return "Notificación recibida";
+        notificationQueue.push(request);
+        return "Notificación encolada";
     }
 }
