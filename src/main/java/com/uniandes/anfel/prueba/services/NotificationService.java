@@ -7,6 +7,7 @@ import com.uniandes.anfel.prueba.queue.NotificationQueue;
 import jakarta.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -68,8 +69,23 @@ public class NotificationService {
             long fin = System.currentTimeMillis();
             long latencia = fin - inicio;
 
-            sendNotification("Seller", request.getSellerUserIp(), request.getNotificationId(), request.getNotificationMessage());
-            sendNotification("Buyer", request.getBuyerUserIp(), request.getNotificationId(), request.getNotificationMessage());
+            // Ejecuta ambas notificaciones en paralelo
+            CompletableFuture<Void> sellerFuture = CompletableFuture.runAsync(() -> {
+                sendNotification("Seller",
+                        request.getSellerUserIp(),
+                        request.getNotificationId(),
+                        request.getNotificationMessage());
+            });
+
+            CompletableFuture<Void> buyerFuture = CompletableFuture.runAsync(() -> {
+                sendNotification("Buyer",
+                        request.getBuyerUserIp(),
+                        request.getNotificationId(),
+                        request.getNotificationMessage());
+            });
+
+            // Esperar a que ambas terminen
+            CompletableFuture.allOf(sellerFuture, buyerFuture).join();
 
             totalNotificaciones.addAndGet(2);
             sumaLatencias.addAndGet(latencia);
