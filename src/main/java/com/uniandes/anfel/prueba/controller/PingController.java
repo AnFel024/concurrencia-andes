@@ -14,7 +14,7 @@ public class PingController {
         this.pingService = pingService;
     }
 
-    @GetMapping("/ping")
+    @GetMapping("/")
     public ResponseEntity<String> ping() {
         return ResponseEntity.ok().body(pingService.pong());
     }
