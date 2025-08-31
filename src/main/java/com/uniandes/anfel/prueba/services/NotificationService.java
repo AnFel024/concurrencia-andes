@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class NotificationService {
 
-    private static final int RETARDO_MS = 200; // configurable
+    private static final int RETARDO_MS = 500; // configurable
     private static final int MAX_LATENCIA_MS = 1000;
     private static final String LOG_FILE = "notificaciones.csv";
 
@@ -35,36 +35,33 @@ public class NotificationService {
         long inicio = System.currentTimeMillis();
         pool.submit(() -> {
             try {
-                Thread.sleep(new Random().nextInt(50) + 50);
-                sendNotification("Seller", request.getSellerUserIp(), request.getNotificationId(), request.getNotificationMessage(), inicio);
-                sendNotification("Buyer", request.getBuyerUserIp(), request.getNotificationId(), request.getNotificationMessage(), inicio);
-            } catch (InterruptedException e) {
+                Thread.sleep(RETARDO_MS);
+                long fin = System.currentTimeMillis();
+                long latencia = fin - inicio;
+                sendNotification("Seller", request.getSellerUserIp(), request.getNotificationId(), request.getNotificationMessage());
+                sendNotification("Buyer", request.getBuyerUserIp(), request.getNotificationId(), request.getNotificationMessage());
+                totalNotificaciones.addAndGet(2);
+                sumaLatencias.addAndGet(latencia);
+                latenciaMaxima.updateAndGet(x -> Math.max(x, latencia));
+                if (latencia <= MAX_LATENCIA_MS) {
+                    notificacionesCumplen.addAndGet(2);
+                }
+                // Guardar en archivo
+                synchronized (lock) {
+                    try (FileWriter fw = new FileWriter(LOG_FILE, true)) {
+                        fw.write("Seller," + request.getSellerUserIp() + "," + request.getNotificationId() + "," + request.getNotificationMessage() + "," + latencia + "," + fin + "\n");
+                        fw.write("Buyer," + request.getBuyerUserIp() + "," + request.getNotificationId() + "," + request.getNotificationMessage() + "," + latencia + "," + fin + "\n");
+                    }
+                }
+                System.out.println("Notificaciones enviadas a Seller y Buyer en " + latencia + " ms: " + request.getNotificationMessage());
+            } catch (InterruptedException | IOException e) {
                 Thread.currentThread().interrupt();
             }
         });
     }
 
-    private void sendNotification(String destinatario, String userIp, String notificationId, String notificationMessage, long inicio) {
-        try {
-            Thread.sleep(RETARDO_MS);
-            long fin = System.currentTimeMillis();
-            long latencia = fin - inicio;
-            totalNotificaciones.incrementAndGet();
-            sumaLatencias.addAndGet(latencia);
-            latenciaMaxima.updateAndGet(x -> Math.max(x, latencia));
-            if (latencia <= MAX_LATENCIA_MS) {
-                notificacionesCumplen.incrementAndGet();
-            }
-            // Guardar en archivo
-            synchronized (lock) {
-                try (FileWriter fw = new FileWriter(LOG_FILE, true)) {
-                    fw.write(destinatario + "," + userIp + "," + notificationId + "," + notificationMessage + "," + latencia + "," + fin + "\n");
-                }
-            }
-            System.out.println("Notificacion enviada a " + destinatario + " (" + userIp + ") en " + latencia + " ms: " + notificationMessage);
-        } catch (InterruptedException | IOException e) {
-            Thread.currentThread().interrupt();
-        }
+    private void sendNotification(String destinatario, String userIp, String notificationId, String notificationMessage) {
+        // Simula el envío, pero no espera ni calcula latencia individual
     }
 
     private void inicializarArchivo() {
