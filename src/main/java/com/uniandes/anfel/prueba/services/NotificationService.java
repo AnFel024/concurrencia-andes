@@ -7,7 +7,6 @@ import com.uniandes.anfel.prueba.queue.NotificationQueue;
 import jakarta.annotation.PostConstruct;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class NotificationService {
 
-    private static final int RETARDO_MS = 500; // configurable
+    private static final int RETARDO_MS = 100; // configurable
     private static final int MAX_LATENCIA_MS = 1000;
     private static final String LOG_FILE = "notificaciones.csv";
 
@@ -62,7 +61,7 @@ public class NotificationService {
     }
 
     public void processNotification(NotificationRequest request) {
-        System.out.println("Procesando notificación: " + request);
+        // System.out.println("Procesando notificación: " + request);
         long inicio = System.currentTimeMillis();
         try {
             Thread.sleep(RETARDO_MS);

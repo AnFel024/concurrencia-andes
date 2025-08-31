@@ -13,7 +13,7 @@ public class NotificationController {
     private NotificationQueue notificationQueue;
 
     @PostMapping("/send-notification")
-    public String processNotification(@RequestBody NotificationRequest request) {
+    public String handleNotification(@RequestBody NotificationRequest request) {
         notificationQueue.push(request);
         return "Notificación encolada";
     }
